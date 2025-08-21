@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CueFinder Venue Portal
 
-## Getting Started
+A web-based management portal for pool hall venue owners to manage bookings, tables, and analytics. Built with Next.js 14 and Firebase.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- 🔐 **Secure Authentication** - Firebase Auth with role-based access
+- 📊 **Dashboard** - Real-time stats and upcoming bookings
+- 📅 **Booking Management** - Accept, reject, and track customer bookings
+- 🎱 **Table Management** - Monitor table availability and maintenance
+- 📈 **Analytics** - Revenue tracking and business insights
+- ⚙️ **Settings** - Venue configuration and business rules
+- 🔄 **Real-time Updates** - Live data synchronization with Firestore
+
+## Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend**: Firebase (Firestore, Authentication)
+- **Deployment**: Railway
+- **Icons**: Lucide React
+
+## Prerequisites
+
+- Node.js 18+ and npm
+- Firebase project with Firestore and Authentication enabled
+- Railway account (for deployment)
+
+## Environment Variables
+
+Create a `.env.local` file with your Firebase configuration:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run development server
+npm run dev
 
-## Learn More
+# Build for production
+npm run build
 
-To learn more about Next.js, take a look at the following resources:
+# Start production server
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment to Railway
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push code to GitHub
+2. Connect Railway to your GitHub repository
+3. Add environment variables in Railway dashboard
+4. Deploy (Railway will auto-detect Next.js and configure build)
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+├── app/                    # Next.js App Router pages
+│   ├── dashboard/         # Protected dashboard routes
+│   │   ├── bookings/     # Booking management
+│   │   ├── tables/       # Table management
+│   │   ├── analytics/    # Business analytics
+│   │   └── settings/     # Venue settings
+│   └── login/            # Authentication page
+├── components/           # Reusable React components
+├── lib/                  # Utilities and Firebase config
+├── types/               # TypeScript type definitions
+└── public/              # Static assets
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## User Roles
+
+- **venue_owner**: Full access to venue management features
+- **customer**: Mobile app access only (not supported in portal)
+- **admin**: System administration (future)
+
+## Firebase Data Structure
+
+```
+venues/
+  └── {venueId}/
+      ├── name
+      ├── address
+      ├── phone
+      └── ...
+
+bookings/
+  └── {bookingId}/
+      ├── venueId
+      ├── userId
+      ├── status
+      ├── startTime
+      └── ...
+
+tables/
+  └── {tableId}/
+      ├── venueId
+      ├── number
+      ├── status
+      └── ...
+
+users/
+  └── {userId}/
+      ├── role
+      ├── venueId
+      └── ...
+```
+
+## Development
+
+```bash
+# Run linter
+npm run lint
+
+# Type check
+npm run build
+```
+
+## License
+
+Private - CueFinder © 2025
