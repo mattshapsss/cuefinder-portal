@@ -82,7 +82,7 @@ export default function DashboardLayout({
                 <div className="flex items-center w-full">
                   <div className="flex-1">
                     <p className="text-sm font-medium text-white">
-                      {userData.name || userData.email}
+                      {userData.displayName || userData.email}
                     </p>
                     <p className="text-xs text-gray-300">
                       Venue Owner

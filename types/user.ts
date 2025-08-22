@@ -1,11 +1,14 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  displayName: string;
   role: UserRole;
-  venueId?: string; // For venue owners
+  ownedVenueIds: string[]; // Array of venue IDs for venue owners
   createdAt: Date;
   phoneNumber?: string;
+  profileImageURL?: string;
+  // Backward compatibility - first venue from ownedVenueIds
+  venueId?: string;
 }
 
 export enum UserRole {
