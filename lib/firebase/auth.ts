@@ -76,7 +76,7 @@ export async function signUp(email: string, password: string, venueName: string)
       ownedVenueIds: [venueId],
       createdAt: new Date(),
       phoneNumber: '',
-      profileImageURL: null
+      profileImageURL: undefined
     };
     
     await setDoc(doc(db, 'users', uid), userData);
@@ -125,7 +125,7 @@ export async function signInWithGoogle() {
         ownedVenueIds: [venueId],
         createdAt: new Date(),
         phoneNumber: '',
-        profileImageURL: result.user.photoURL
+        profileImageURL: result.user.photoURL || undefined
       };
       
       await setDoc(doc(db, 'users', result.user.uid), userData);
@@ -190,8 +190,8 @@ export async function getCurrentUser(): Promise<User | null> {
     
     // Add venueId for backward compatibility
     return {
-      id: firebaseUser.uid,
       ...userData,
+      id: firebaseUser.uid,
       venueId: userData.ownedVenueIds?.[0] || undefined
     } as User;
   } catch (error) {
