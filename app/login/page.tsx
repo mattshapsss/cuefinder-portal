@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, signUp, signInWithGoogle } from '@/lib/firebase/auth';
-import { Mail, Lock, Building2, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, Info } from 'lucide-react';
+import VenueSearch from '@/components/VenueSearch';
+import { Venue } from '@/types/venue';
 
 export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [venueName, setVenueName] = useState('');
+  const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -34,8 +36,14 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    if (!selectedVenue) {
+      setError('Please select a venue from the list');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await signUp(email, password, venueName);
+      await signUp(email, password, selectedVenue.id);
       router.push('/dashboard');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to create account');
@@ -49,8 +57,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithGoogle();
-      router.push('/dashboard');
+      const result = await signInWithGoogle();
+      if (result.needsVenueClaim) {
+        router.push('/claim-venue');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to sign in with Google');
     } finally {
@@ -66,7 +78,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="px-8 pt-8 pb-6 text-center border-b border-gray-100">
             {/* Logo Placeholder */}
-            <div className="w-16 h-16 bg-purple-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
               <span className="text-2xl">🎱</span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">Venue Management Portal</h1>
@@ -81,7 +93,7 @@ export default function LoginPage() {
               onClick={() => setActiveTab('signin')}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'signin'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -91,7 +103,7 @@ export default function LoginPage() {
               onClick={() => setActiveTab('signup')}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'signup'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -120,7 +132,7 @@ export default function LoginPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -143,7 +155,7 @@ export default function LoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                       placeholder="••••••••"
                     />
                   </div>
@@ -153,7 +165,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                  className="w-full py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">
@@ -167,32 +179,34 @@ export default function LoginPage() {
               </form>
             ) : (
               <form onSubmit={handleSignUp} className="space-y-5">
-                {/* Venue Name Field */}
+                {/* Venue Selection Field */}
                 <div>
-                  <label htmlFor="venue-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Venue Name
+                  <label htmlFor="venue-search" className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Your Venue
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building2 className="h-5 w-5 text-gray-400" />
+                  <VenueSearch
+                    onSelect={(venue) => setSelectedVenue(venue)}
+                    placeholder="Search for your venue..."
+                  />
+                  {selectedVenue && (
+                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-xl">
+                      <p className="text-sm text-blue-900 font-medium">{selectedVenue.name}</p>
+                      <p className="text-xs text-blue-700">{selectedVenue.address}</p>
                     </div>
-                    <input
-                      id="venue-name"
-                      name="venueName"
-                      type="text"
-                      required
-                      value={venueName}
-                      onChange={(e) => setVenueName(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
-                      placeholder="Your Pool Hall Name"
-                    />
+                  )}
+                  <div className="mt-2 flex items-start gap-2">
+                    <Info className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-gray-500">
+                      Can&apos;t find your venue? It may not be in our system yet. 
+                      Please contact support to add your venue.
+                    </p>
                   </div>
                 </div>
 
                 {/* Email Field */}
                 <div>
                   <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
+                    Business Email
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -206,7 +220,7 @@ export default function LoginPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -229,7 +243,7 @@ export default function LoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm"
+                      className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
                       placeholder="••••••••"
                     />
                   </div>
@@ -239,7 +253,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                  className="w-full py-3 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center">
@@ -274,7 +288,7 @@ export default function LoginPage() {
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="mt-6 w-full flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-6 w-full flex items-center justify-center px-4 py-3 border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path

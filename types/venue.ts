@@ -19,7 +19,19 @@ export interface Venue {
   // Booking
   bookingEnabled: boolean;
   ownerId?: string;
+  ownerEmail?: string;
   requiresApproval?: boolean;
+  
+  // Venue claiming and verification
+  claimedAt?: Date;
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  
+  // External booking systems (from enrichment)
+  externalBooking?: {
+    hasOpenTable?: boolean;
+    hasResy?: boolean;
+    hasYelp?: boolean;
+  };
   
   // Location
   location?: {

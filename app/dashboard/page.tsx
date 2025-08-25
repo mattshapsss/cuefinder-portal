@@ -6,6 +6,8 @@ import { getTodayStats, getVenueBookings } from '@/lib/firebase/firestore';
 import { Booking } from '@/types/booking';
 import { Calendar, DollarSign, Grid3x3, TrendingUp, Clock, Users } from 'lucide-react';
 import { format } from 'date-fns';
+import StatCard from '@/components/ui/StatCard';
+import Card from '@/components/ui/Card';
 
 interface DashboardStats {
   bookings: number;
@@ -75,87 +77,51 @@ export default function DashboardPage() {
         <StatCard
           title="Today's Bookings"
           value={stats?.bookings || 0}
-          icon={<Calendar className="h-5 w-5" />}
-          color="bg-blue-500"
+          icon={Calendar}
+          color="blue"
         />
         <StatCard
           title="Revenue"
           value={`$${stats?.revenue || 0}`}
-          icon={<DollarSign className="h-5 w-5" />}
-          color="bg-green-500"
+          icon={DollarSign}
+          color="green"
         />
         <StatCard
           title="Tables Occupied"
           value={`${stats?.occupied || 0}/${stats?.total || 0}`}
-          icon={<Grid3x3 className="h-5 w-5" />}
-          color="bg-yellow-500"
+          icon={Grid3x3}
+          color="orange"
         />
         <StatCard
           title="Utilization"
           value={`${stats?.utilization || 0}%`}
-          icon={<TrendingUp className="h-5 w-5" />}
-          color="bg-purple-500"
+          icon={TrendingUp}
+          color="purple"
         />
       </div>
 
       {/* Upcoming Bookings */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-            Upcoming Bookings
-          </h3>
-          {upcomingBookings.length === 0 ? (
-            <p className="text-gray-500">No upcoming bookings today</p>
-          ) : (
-            <div className="space-y-3">
-              {upcomingBookings.map((booking) => (
-                <BookingCard key={booking.id} booking={booking} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ 
-  title, 
-  value, 
-  icon, 
-  color 
-}: { 
-  title: string; 
-  value: string | number; 
-  icon: React.ReactNode; 
-  color: string;
-}) {
-  return (
-    <div className="bg-white overflow-hidden shadow rounded-lg">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className={`flex-shrink-0 ${color} rounded-md p-3 text-white`}>
-            {icon}
+      <Card padding="lg">
+        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+          Upcoming Bookings
+        </h3>
+        {upcomingBookings.length === 0 ? (
+          <p className="text-gray-500">No upcoming bookings today</p>
+        ) : (
+          <div className="space-y-3">
+            {upcomingBookings.map((booking) => (
+              <BookingCard key={booking.id} booking={booking} />
+            ))}
           </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">
-                {title}
-              </dt>
-              <dd className="text-2xl font-semibold text-gray-900">
-                {value}
-              </dd>
-            </dl>
-          </div>
-        </div>
-      </div>
+        )}
+      </Card>
     </div>
   );
 }
 
 function BookingCard({ booking }: { booking: Booking }) {
   return (
-    <div className="border rounded-lg p-4 hover:bg-gray-50">
+    <div className="border border-gray-100 rounded-xl p-4 hover:bg-gray-50 transition-colors">
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center space-x-2">

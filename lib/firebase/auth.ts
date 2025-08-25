@@ -47,31 +47,37 @@ export async function signIn(email: string, password: string) {
   }
 }
 
-export async function signUp(email: string, password: string, venueName: string) {
+export async function signUp(email: string, password: string, venueId: string) {
   try {
+    // Check if venue exists and is not already claimed
+    const venueDoc = await getDoc(doc(db, 'venues', venueId));
+    if (!venueDoc.exists()) {
+      throw new Error('Venue not found');
+    }
+    
+    const venueData = venueDoc.data();
+    if (venueData.ownerId) {
+      throw new Error('This venue has already been claimed');
+    }
+    
     // Create auth user
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const uid = userCredential.user.uid;
     
-    // Create venue document
-    const venueId = `venue_${uid}_${Date.now()}`;
+    // Update existing venue with owner info
     await setDoc(doc(db, 'venues', venueId), {
-      id: venueId,
-      name: venueName,
       ownerId: uid,
-      createdAt: new Date(),
-      address: '',
-      phone: '',
-      email: email,
+      ownerEmail: email,
       bookingEnabled: true,
-      isActive: true
-    });
+      claimedAt: new Date(),
+      verificationStatus: 'pending'
+    }, { merge: true });
     
     // Create user profile
     const userData: User = {
       id: uid,
       email: email,
-      displayName: venueName,
+      displayName: venueData.name || 'Venue Owner',
       role: UserRole.VENUE_OWNER,
       ownedVenueIds: [venueId],
       createdAt: new Date(),
@@ -100,29 +106,13 @@ export async function signInWithGoogle() {
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     
     if (!userDoc.exists()) {
-      // Create new venue owner account
-      const venueId = `venue_${result.user.uid}_${Date.now()}`;
-      
-      // Create venue document
-      await setDoc(doc(db, 'venues', venueId), {
-        id: venueId,
-        name: `${result.user.displayName}'s Venue`,
-        ownerId: result.user.uid,
-        createdAt: new Date(),
-        address: '',
-        phone: '',
-        email: result.user.email,
-        bookingEnabled: true,
-        isActive: true
-      });
-      
-      // Create user profile as venue owner
+      // Create new venue owner account WITHOUT venue (they'll claim it later)
       const userData: User = {
         id: result.user.uid,
         email: result.user.email || '',
         displayName: result.user.displayName || 'Venue Owner',
         role: UserRole.VENUE_OWNER,
-        ownedVenueIds: [venueId],
+        ownedVenueIds: [], // Empty - no venue yet
         createdAt: new Date(),
         phoneNumber: '',
         profileImageURL: result.user.photoURL || undefined
@@ -132,7 +122,8 @@ export async function signInWithGoogle() {
       
       return {
         user: result.user,
-        userData
+        userData,
+        needsVenueClaim: true // Signal that user needs to claim a venue
       };
     } else {
       // Check existing user role
@@ -143,14 +134,19 @@ export async function signInWithGoogle() {
         throw new Error('This account is registered as a customer. Please use the mobile app.');
       }
       
+      // Check if they have a venue
       if (!userData.ownedVenueIds || userData.ownedVenueIds.length === 0) {
-        await firebaseSignOut(auth);
-        throw new Error('No venue associated with this account');
+        return {
+          user: result.user,
+          userData,
+          needsVenueClaim: true // Existing user but no venue yet
+        };
       }
       
       return {
         user: result.user,
-        userData
+        userData,
+        needsVenueClaim: false
       };
     }
   } catch (error) {

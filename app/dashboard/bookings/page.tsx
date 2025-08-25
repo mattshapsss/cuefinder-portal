@@ -88,10 +88,12 @@ export default function BookingsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-orange-100 text-orange-800';
       case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'checked_in': return 'bg-blue-100 text-blue-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       case 'completed': return 'bg-gray-100 text-gray-800';
+      case 'no_show': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -110,7 +112,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow space-y-4">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -120,7 +122,7 @@ export default function BookingsPage() {
               type="date"
               value={format(selectedDate, 'yyyy-MM-dd')}
               onChange={(e) => setSelectedDate(new Date(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
           </div>
           <div>
@@ -130,7 +132,7 @@ export default function BookingsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -158,7 +160,7 @@ export default function BookingsPage() {
       </div>
 
       {/* Bookings List */}
-      <div className="bg-white shadow rounded-lg">
+      <div className="bg-white shadow-sm rounded-xl border border-gray-100">
         {filteredBookings.length === 0 ? (
           <div className="p-6 text-center text-gray-500">
             No bookings found for the selected filters
@@ -246,14 +248,14 @@ export default function BookingsPage() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleStatusUpdate(booking.id, BookingStatus.CONFIRMED)}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-green-600 hover:text-green-700 transition-colors"
                             title="Confirm"
                           >
                             <CheckCircle className="h-5 w-5" />
                           </button>
                           <button
                             onClick={() => handleStatusUpdate(booking.id, BookingStatus.CANCELLED)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-700 transition-colors"
                             title="Cancel"
                           >
                             <XCircle className="h-5 w-5" />
@@ -262,8 +264,8 @@ export default function BookingsPage() {
                       )}
                       {booking.status === 'confirmed' && (
                         <button
-                          onClick={() => handleStatusUpdate(booking.id, BookingStatus.COMPLETED)}
-                          className="text-blue-600 hover:text-blue-900 text-sm"
+                          onClick={() => handleStatusUpdate(booking.id, BookingStatus.CHECKED_IN)}
+                          className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all"
                         >
                           Check In
                         </button>
