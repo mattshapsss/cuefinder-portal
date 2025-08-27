@@ -20,9 +20,25 @@ import { Booking, BookingStatus } from '@/types/booking';
 import { Venue } from '@/types/venue';
 import { Table } from '@/types/table';
 import { User } from '@/types/user';
+import { DEMO_BOOKINGS, DEMO_VENUE, getDemoStats } from '../demo/demoData';
+
+// Check if in demo mode
+const isDemoMode = () => typeof window !== 'undefined' && sessionStorage.getItem('cuefinder_demo_mode') === 'true';
 
 // Booking operations
 export async function getVenueBookings(venueId: string, date?: Date): Promise<Booking[]> {
+  // Return demo data if in demo mode
+  if (isDemoMode()) {
+    let bookings = DEMO_BOOKINGS;
+    if (date) {
+      const targetDate = new Date(date);
+      bookings = bookings.filter(b => {
+        const bookingDate = new Date(b.startTime);
+        return bookingDate.toDateString() === targetDate.toDateString();
+      });
+    }
+    return bookings;
+  }
   try {
     let q = query(
       collection(db, 'bookings'),
@@ -78,6 +94,11 @@ export async function updateBookingStatus(
 }
 
 export async function getVenue(venueId: string): Promise<Venue | null> {
+  // Return demo venue if in demo mode
+  if (isDemoMode()) {
+    return DEMO_VENUE;
+  }
+  
   try {
     const venueDoc = await getDoc(doc(db, 'venues', venueId));
     
@@ -117,6 +138,12 @@ export async function getUserProfile(userId: string): Promise<User | null> {
 
 // Table functions
 export async function getVenueTables(venueId: string): Promise<Table[]> {
+  // Return demo tables if in demo mode
+  if (isDemoMode()) {
+    const { DEMO_TABLES } = await import('../demo/demoData');
+    return DEMO_TABLES;
+  }
+  
   try {
     const q = query(
       collection(db, 'tables'),
@@ -176,6 +203,11 @@ export function subscribeToBookings(
 
 // Analytics functions
 export async function getTodayStats(venueId: string) {
+  // Return demo stats if in demo mode
+  if (isDemoMode()) {
+    return getDemoStats();
+  }
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/providers/auth-provider';
 import { signOut } from '@/lib/firebase/auth';
+import DemoBanner from '@/components/DemoBanner';
 import { 
   Home, 
   Calendar, 
@@ -20,18 +21,25 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, userData, loading } = useAuth();
+  const { user, userData, loading, isDemo } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Allow demo mode or authenticated users
+    if (!loading && !user && !isDemo) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, isDemo, router]);
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
+    // If in demo mode, just clear demo session
+    if (isDemo) {
+      sessionStorage.removeItem('cuefinder_demo_mode');
+      router.push('/login');
+    } else {
+      await signOut();
+      router.push('/login');
+    }
   };
 
   if (loading) {
@@ -42,7 +50,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!user || !userData) {
+  if (!userData) {
     return null;
   }
 
@@ -102,6 +110,9 @@ export default function DashboardLayout({
 
         {/* Main content */}
         <div className="flex flex-col w-0 flex-1 overflow-hidden">
+          {/* Demo Mode Banner */}
+          <DemoBanner />
+          
           <main className="flex-1 relative overflow-y-auto focus:outline-none">
             <div className="py-6">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
